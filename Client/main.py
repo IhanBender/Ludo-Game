@@ -199,6 +199,11 @@ yValues = [
         initialY - SQUARE_SIDE * 7,
 ]
 
+redCoords = []
+greenCoords = []
+yellowCoords = []
+blueCoords = []
+
 board = Board.Board()
 piece = Piece.Piece()
 
