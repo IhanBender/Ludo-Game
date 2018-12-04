@@ -27,3 +27,9 @@ def ExitMessage():
 
 def ReadMessage(message):
     return message.split(' ')
+
+
+def HandleDice():
+    return DICE + ' ' +str(rand.randint(1, 6))
+
+#def HandleQueue

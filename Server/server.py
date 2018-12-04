@@ -1,20 +1,46 @@
 import socket
 import thread
+import mutex
+import threading
+from user import User
 
 HOST = '192.168.0.8'      # Endereco IP do Servidor
-PORT = 5000              # Porta que o Servidor esta
+PORT = 4000              # Porta que o Servidor esta
 
+userMutex = threading.Lock()
 connectedUsers = []
 
+def messageType(msg):
+    return msg.split(' ')[0]
+
 def conectado(con, cliente):
+    global connectedUsers
+    currentUser = User(cliente, '')
     print 'Conectado por', cliente
 
     while True:
         msg = con.recv(1024)
         if not msg: break
-        print cliente, msg
- 
+        print msg
+        if messageType(msg) == '/USERNAME':
+            username = msg.split(' ')[1]
+            for user in connectedUsers:
+                if user.username == username:
+                    con.send('/DENY')
+                    print ("Username denied")
+                    break
+            con.send('/CONFIRM')
+            currentUser = User(cliente, username)
+            userMutex.acquire()
+            connectedUsers.append(currentUser)
+            userMutex.release()
+    
+    
     print 'Finalizando conexao do cliente', cliente
+    userMutex.acquire()
+    connectedUsers.remove(currentUser)
+    userMutex.release()
+    
     con.close()
     thread.exit()
  

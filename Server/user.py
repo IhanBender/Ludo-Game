@@ -1,6 +1,6 @@
-def class User:
+class User:
     
-    def __init__(self, ip_addres, username):
-        self.ip_addres = ip_addres
+    def __init__(self, cliente, username):
+        self.cliente = cliente
         self.username = username
         self.match_id = -1
