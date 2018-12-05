@@ -1,6 +1,47 @@
 class Coordinates:
 
     def __init__(self):
+        self.redInitials = [
+            [215, 415],
+            [255, 415],
+            [215, 455],
+            [255, 455]
+        ]
+        self.greenInitials = [
+            [215, 115],
+            [255, 115],
+            [215, 155],
+            [255, 155]
+        ]
+        self.blueInitials = [
+            [515, 115],
+            [555, 115],
+            [515, 155],
+            [555, 155]
+        ]
+        self.yellowInitials = [
+            [515, 415],
+            [555, 415],
+            [515, 455],
+            [555, 455]
+        ]
+
+        self.redFinals = [
+            [375, 327],
+            [395, 327],
+            [415, 327],
+            [395, 310]
+        ]
+        self.greenFinals = [
+            [360, 272],
+            [360, 292],
+            [360, 312],
+            [375, 292]
+        ]
+        
+        # self.blueFinals
+        # self.yellowFinals
+        
         self.SQUARE_SIDE = 30
         self.initialX = 387 - self.SQUARE_SIDE
         self.xValues = [

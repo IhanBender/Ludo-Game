@@ -1,6 +1,6 @@
 import pygame
 
-class Piece:
+class PieceDrawer:
 
     def __init__(self):
         self.red30 = pygame.image.load("images/red30.png")

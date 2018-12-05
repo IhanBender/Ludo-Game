@@ -8,7 +8,9 @@ HOST = '192.168.0.8'      # Endereco IP do Servidor
 PORT = 4000              # Porta que o Servidor esta
 
 userMutex = threading.Lock()
+matchesMutex = threading.Lock()
 connectedUsers = []
+currentMatches = []
 
 def messageType(msg):
     return msg.split(' ')[0]
@@ -40,7 +42,7 @@ def conectado(con, cliente):
     userMutex.acquire()
     connectedUsers.remove(currentUser)
     userMutex.release()
-    
+
     con.close()
     thread.exit()
  
