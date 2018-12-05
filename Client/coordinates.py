@@ -38,9 +38,18 @@ class Coordinates:
             [360, 312],
             [375, 292]
         ]
-        
-        # self.blueFinals
-        # self.yellowFinals
+        self.blueFinals = [
+            [430, 272],
+            [430, 292],
+            [430, 312],
+            [412, 292]
+        ]
+        self.yellowFinals = [
+            [375, 257],
+            [395, 257],
+            [415, 257],
+            [4395, 275]
+        ]
         
         self.SQUARE_SIDE = 30
         self.initialX = 387 - self.SQUARE_SIDE

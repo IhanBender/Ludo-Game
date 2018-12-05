@@ -77,10 +77,7 @@ while not done:
     screen.fill([255, 255, 255])
     screen.blit(state['screen'], state['screen'].get_rect())
 
-    piecedrawer.drawRedPiece(screen, 360, 272, 15)
-    piecedrawer.drawRedPiece(screen, 360, 292, 15)
-    piecedrawer.drawRedPiece(screen, 360, 312, 15)
-    piecedrawer.drawRedPiece(screen, 375, 292, 15)
+    piecedrawer.drawRedPiece(screen, coords.yellowFinals[0], 15)
     
     pygame.display.flip()
 
