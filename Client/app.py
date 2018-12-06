@@ -18,6 +18,53 @@ if 'wlp3s0' in interfaces:
 else:
     ip = '192.168.0.8'
 
+def readState(description):
+    # Divide em uma lista e retira o /STATE
+    description = description.split(' ')[1:]
+    # Players
+    players = []
+    i = 1
+    while description[i] != '\PLAYERS':
+        players.append(description[i])
+        i += 1
+
+    # Current turn
+    currentTurn = description[i]
+    i+=1
+
+    # Current play
+    currentPlay = description[i]
+    i+=1
+
+    # Positions
+    redPositions = [
+        [int(description[i]), int(description[i+1])],
+        [int(description[i+2]), int(description[i+3])],
+        [int(description[i+4]), int(description[i+5])],
+        [int(description[i+6]), int(description[i+7])],
+    ]
+    greenPositions = [
+        [int(description[i+8]), int(description[i+9])],
+        [int(description[i+10]), int(description[i+11])],
+        [int(description[i+12]), int(description[i+13])],
+        [int(description[i+14]), int(description[i+15])],
+    ]
+    bluePositions = [
+        [int(description[i+16]), int(description[i+17])],
+        [int(description[i+18]), int(description[i+19])],
+        [int(description[i+20]), int(description[i+21])],
+        [int(description[i+22]), int(description[i+23])],
+    ]
+    yellowPositions = [
+        [int(description[i+24]), int(description[i+25])],
+        [int(description[i+26]), int(description[i+27])],
+        [int(description[i+28]), int(description[i+29])],
+        [int(description[i+30]), int(description[i+31])],
+    ]
+
+    # A função ainda nao retorna nada
+
+
 def messageType(msg):
     return msg.split(' ')[0]
 
