@@ -72,30 +72,34 @@ def param1(msg):
 
 def enterQueue():
     startTime = time.time()
-    state['inqueue'] = True
     tcp.send(protocol.QueueMessage())
     print "Buscando Partida"
-    state['screen'] = searchClick
-    drawBackground()
-    draw()
-    state['screen'] = searching
-    drawBackground()
-    draw()
     msg = tcp.recv(1024)
-    if messageType(msg) == '/BEGIN':
-        state['currentMatch'] = param1(msg)
-        state['ingame'] = True
-        state['inqueue'] = False
-        state['screen'] = board.BACKGROUND_IMAGE
+    if messageType(msg) == '/CONFIRM':
+        state['inqueue'] = True
+        state['screen'] = searchClick
         drawBackground()
-        requestState()
+        draw()
+        state['screen'] = searching
+        drawBackground()
         draw()
         return True
+    elif messageType(msg) == '/BEGIN':
+        enterGame(param1(msg))
     return False
+
+def enterGame(currentMatch):
+    print "Partida encontrada"
+    state['currentMatch'] = currentMatch
+    state['ingame'] = True
+    state['screen'] = board.BACKGROUND_IMAGE
+    drawBackground()
+    requestState()
+    draw()
 
 def requestState():
     if state["ingame"]:
-        tcp.send('/STATE')
+        tcp.send('/STATE ' + state['currentMatch'])
         msg = tcp.recv(1024)
         if messageType('msg') == '/STATE':
             state['gamestate'] = param1(msg)
@@ -136,9 +140,9 @@ def draw():
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
 # Conecta ao servidor
-ip = '172.27.44.220'
+ip = '192.168.0.16'
 HOST = ip              # Endereco IP do Servidor
-PORT = 4000            # Porta que o Servidor esta
+PORT = 10000       # Porta que o Servidor esta
 tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 dest = (HOST, PORT)
 # Tenta conectar ao servidor
@@ -194,7 +198,10 @@ while not done:
         if  (pygame.mouse.get_pressed()[0] == 1):
             if (insideStartGame(pygame.mouse.get_pos())) and \
             state['screen'] == inicialScreen:
-                enterQueue()
+                if enterQueue():
+                    msg = tcp.recv(1024)
+                    if messageType(msg) == '/BEGIN':
+                        enterGame(param1(msg))
 
             if diceHit(pygame.mouse.get_pos()) and \
             state['screen'] == board.BACKGROUND_IMAGE and \

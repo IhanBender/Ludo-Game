@@ -8,17 +8,17 @@ from state import State
 from user import User
 from match import Match
 
-HOST = '172.27.44.177'         # Endereco IP do Servidor
-PORT = 10000       # Porta que o Servidor esta
+HOST = '192.168.0.16'         # Endereco IP do Servidor
+PORT = 10000      # Porta que o Servidor esta
 
 MATCH_ID = 0
-MAX_QUEUE_SIZE = 4
+MAX_QUEUE_SIZE = 2
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
 queueMutex = threading.Lock()
 readyMutex = threading.Lock()
-connectedUsers = []
+connectedUsers = {}
 currentMatches = []
 readyToPlay = []
 userQueue = Queue(maxsize=MAX_QUEUE_SIZE)
@@ -47,15 +47,14 @@ def createMatch(nickname):
     global MATCH_ID
     players = []
     for i in range(0, MAX_QUEUE_SIZE):
-        players.append(connectedUsers[userQueue.get().username])
+        players.append(connectedUsers[userQueue.get()])
     matchId = MATCH_ID
     MATCH_ID += 1
 
     for player in players:
         readyToPlay.append([player, matchId])
-
     players.append(connectedUsers[nickname])
-    currentMatches[MATCH_ID] = Match(players, matchId)
+    currentMatches.append(Match(players, matchId))
 
 
 def conectado(con, cliente):
@@ -92,7 +91,7 @@ def conectado(con, cliente):
                 con.send('/DENY')
             else:
                 for user in connectedUsers:
-                    if user.username == username:
+                    if user == username:
                         con.send('/DENY')
                         print ("Username denied")
                         break
@@ -108,8 +107,9 @@ def conectado(con, cliente):
                 con.send('/DENY')
             else:
                 queueMutex.acquire()
-                if userQueue.qsize == MAX_QUEUE_SIZE - 1:
-                    con.send('/BEGIN' + ' ' + str(createMatch(currentUser.username)))
+                if userQueue.qsize() == MAX_QUEUE_SIZE - 1:
+                    userQueue.put(currentUser.username)
+                    con.send('/BEGIN ' + str(createMatch(currentUser.username)))
                     queueMutex.release()
                     # Mutex is released only after match is set
                     currentUser.ingame = True
@@ -143,7 +143,6 @@ def conectado(con, cliente):
 
         # Dice message
         elif messageType(msg) == '/DICE':
-            print 'DICE'
             con.send('/DICE ' + str(random.randint(1, 6)))
 
         # Move message
@@ -156,7 +155,7 @@ def conectado(con, cliente):
 
     print 'Finalizando conexao do cliente', cliente
     userMutex.acquire()
-    connectedUsers.remove(currentUser)
+    del connectedUsers[currentUser]
     userMutex.release()
 
     con.close()
@@ -172,7 +171,6 @@ print ("Server on")
 while True:
     print("listening")
     (con, cliente) = tcp.accept()
-    print("coe")
     thread.start_new_thread(conectado, tuple([con, cliente]))
 
 tcp.close()
