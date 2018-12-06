@@ -15,6 +15,13 @@ def insideStartGame((x,y)):
         return True
     return False
 
+def draw(state):
+    screen.fill([255, 255, 255])
+    screen.blit(state['screen'], state['screen'].get_rect())
+
+    piecedrawer.drawRedPiece(screen, coords.yellowFinals[0], 15)
+
+    pygame.display.flip()
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
 # Conecta ao servidor
@@ -36,7 +43,7 @@ while True:
     if msg.split(' ')[0] == '/DENY':
         name = raw_input('Nome de usuário já utilizado, digite um novo: ')
     elif msg.split(' ')[0] == '/CONFIRM':
-        print("Bem vindo ao jogo " + name) 
+        print("Bem vindo ao jogo " + name)
         break
 
 # Inicializa jogo
@@ -54,11 +61,12 @@ state = {
     'inqueue' : False,
     'ingame' : False,
     #'screen' : inicialScreen,
-    'screen' : board.BACKGROUND_IMAGE,
+    'screen' : inicialScreen,
     'gamestate' : []
 }
 
 done = False
+screenChange = True
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -73,13 +81,9 @@ while not done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
-
-    screen.fill([255, 255, 255])
-    screen.blit(state['screen'], state['screen'].get_rect())
-
-    piecedrawer.drawRedPiece(screen, coords.yellowFinals[0], 15)
-    
-    pygame.display.flip()
+    if screenChange:
+        draw(state)
+        screenChange = False
 
 #msg = raw_input()
 #while msg <> '\x18':
