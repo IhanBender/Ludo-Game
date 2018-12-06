@@ -1,20 +1,27 @@
 import socket
 import thread
 import mutex
-import queue 
+from multiprocessing import Queue
 import threading
 from state import State
 from user import User
+import netifaces as ni
 
-HOST = '192.168.0.8'      # Endereco IP do Servidor
-PORT = 4000              # Porta que o Servidor esta
+interfaces = ni.interfaces()
+if 'wlp3s0' in interfaces:
+    ip = ni.ifaddresses('wlp3s0')[ni.AF_INET][0]['addr']
+else:
+    ip = '192.168.0.8'
+
+HOST = ip         # Endereco IP do Servidor
+PORT = 4000       # Porta que o Servidor esta
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
 queueMutex = threading.Lock()
 connectedUsers = []
 currentMatches = []
-userQueue = queue.Queue(maxsize='4')
+userQueue = Queue(maxsize=4)
 
 def isMatch(identifier):
     for match in currentMatches:
@@ -27,7 +34,7 @@ def getState(identifier):
     for match in currentMatches:
         if match.identifier == identifier:
             return match.state
-        
+
     return False
 
 def messageType(msg):
@@ -41,7 +48,7 @@ def updateUser(user):
             connectedUsers[i] = user
 
 ####
-def createMatch(nickname):
+# def createMatch(nickname):
     # This function has to:
         # Create Match
         # Empty queue
@@ -57,7 +64,7 @@ def conectado(con, cliente):
         if not msg: break
 
         # Allways check:
-        # if 
+        # if
 
         # Receiving messages
         # Username message
@@ -75,7 +82,7 @@ def conectado(con, cliente):
             userMutex.release()
         
         elif messageType(msg) == '/QUEUE':
-            if curentUser.inqueue or curentUser.ingame:
+            if currentUser.inqueue or currentUser.ingame:
                 con.send('/DENY')
             else:
                 queueMutex.acquire()

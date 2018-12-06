@@ -5,10 +5,18 @@ import socket
 import pygame
 from board import Board
 from pieceDrawer import PieceDrawer
+from dice import Dice
 from coordinates import Coordinates
 import protocol
 import datetime
 import time
+import netifaces as ni
+
+interfaces = ni.interfaces()
+if 'wlp3s0' in interfaces:
+    ip = ni.ifaddresses('wlp3s0')[ni.AF_INET][0]['addr']
+else:
+    ip = '192.168.0.8'
 
 def insideStartGame((x,y)):
     if x >= 0 and y >= 0:
@@ -16,16 +24,13 @@ def insideStartGame((x,y)):
     return False
 
 def draw(state):
-    screen.fill([255, 255, 255])
     screen.blit(state['screen'], state['screen'].get_rect())
-
-    piecedrawer.drawRedPiece(screen, coords.yellowFinals[0], 15)
 
     pygame.display.flip()
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
 # Conecta ao servidor
-HOST = '192.168.0.8'     # Endereco IP do Servidor
+HOST = ip              # Endereco IP do Servidor
 PORT = 4000            # Porta que o Servidor esta
 tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 dest = (HOST, PORT)
@@ -49,11 +54,14 @@ while True:
 # Inicializa jogo
 pygame.init()
 inicialScreen = pygame.image.load("images/main_menu.jpg")
+searchClick = pygame.image.load("images/main_menu2.jpg")
+searching = pygame.image.load("images/buscando3.png")
 screen = pygame.display.set_mode((800, 600))
 
 coords = Coordinates()
 board = Board()
 piecedrawer = PieceDrawer()
+dice = Dice()
 
 startTime = 0.0
 
@@ -67,6 +75,7 @@ state = {
 
 done = False
 screenChange = True
+screen.fill([255, 255, 255])
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -78,10 +87,16 @@ while not done:
             state['inqueue'] = True
             tcp.send(protocol.QueueMessage())
             print "Buscando Partida"
+            state['screen'] = searchClick
+            draw(state)
+            state['screen'] = searching
+            draw(state)
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
     if screenChange:
+        # piecedrawer.drawRedPiece(screen, coords.yellowFinals[0], 15)
+        # dice.drawDice(screen, 0)
         draw(state)
         screenChange = False
 
