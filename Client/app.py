@@ -18,14 +18,50 @@ if 'wlp3s0' in interfaces:
 else:
     ip = '192.168.0.8'
 
+def messageType(msg):
+    return msg.split(' ')[0]
+
 def insideStartGame((x,y)):
-    if x >= 0 and y >= 0:
+    if x in range(280, 520) and y in range(260, 340):
         return True
     return False
 
-def draw(state):
+def enterQueue():
+    startTime = time.time()
+    state['inqueue'] = True
+    tcp.send(protocol.QueueMessage())
+    print "Buscando Partida"
+    state['screen'] = searchClick
+    drawBackground()
+    draw()
+    state['screen'] = searching
+    drawBackground()
+    draw()
+
+def diceHit((x, y)):
+    hitbox = dice.hitbox()
+    if x in hitbox["x"] and y in hitbox["y"]:
+        return True
+    return False
+
+def rollDice():
+    tcp.send('/DICE')
+    dice.drawDice(screen, 0)
+    draw()
+    msg = tcp.recv(1024)
+    if messageType(msg) == '/DICE':
+        roll = int(msg.split(' ')[1])
+        dice.drawDice(screen, roll)
+        time.sleep(0.7)
+        draw()
+        print roll
+        return roll
+    return False
+
+def drawBackground():
     screen.blit(state['screen'], state['screen'].get_rect())
 
+def draw():
     pygame.display.flip()
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
@@ -80,24 +116,23 @@ while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-        if  (pygame.mouse.get_pressed()[0] == 1) and \
-        (insideStartGame(pygame.mouse.get_pos())) and \
-        state['screen'] == inicialScreen:
-            startTime = time.time()
-            state['inqueue'] = True
-            tcp.send(protocol.QueueMessage())
-            print "Buscando Partida"
-            state['screen'] = searchClick
-            draw(state)
-            state['screen'] = searching
-            draw(state)
+        if  (pygame.mouse.get_pressed()[0] == 1):
+            if (insideStartGame(pygame.mouse.get_pos())) and \
+            state['screen'] == inicialScreen:
+                enterQueue()
+            if diceHit(pygame.mouse.get_pos()):
+                roll = rollDice()
+                if roll:
+                    print('Valido')
+                    # Movement
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
+
     if screenChange:
-        # piecedrawer.drawRedPiece(screen, coords.yellowFinals[0], 15)
-        # dice.drawDice(screen, 0)
-        draw(state)
+        drawBackground()
+        draw()
         screenChange = False
 
 #msg = raw_input()

@@ -3,6 +3,7 @@ import thread
 import mutex
 from multiprocessing import Queue
 import threading
+import random
 from state import State
 from user import User
 import netifaces as ni
@@ -113,8 +114,9 @@ def conectado(con, cliente):
                 # There is no such match
                 con.send('/DENY')
 
-        #elif messageType(msg) == '/DICE':
-
+        elif messageType(msg) == '/DICE':
+            print 'DICE'
+            con.send('/DICE ' + str(random.randint(1, 6)))
         #elif messageType(msg) == '/MOVE':
             
         #elif messageType(msg) == '/EXIT':

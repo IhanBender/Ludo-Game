@@ -14,3 +14,6 @@ class Dice:
 
     def drawDice(self, screen, face):
         screen.blit(self.faces[face], (700, 500))
+
+    def hitbox(self):
+        return {"x": range(700, 780), "y": range(500, 580)}
