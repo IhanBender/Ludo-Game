@@ -12,12 +12,6 @@ import datetime
 import time
 import netifaces as ni
 
-interfaces = ni.interfaces()
-if 'wlp3s0' in interfaces:
-    ip = ni.ifaddresses('wlp3s0')[ni.AF_INET][0]['addr']
-else:
-    ip = '192.168.0.8'
-
 def messageType(msg):
     return msg.split(' ')[0]
 
@@ -25,6 +19,9 @@ def insideStartGame((x,y)):
     if x in range(280, 520) and y in range(260, 340):
         return True
     return False
+
+def param1(msg):
+    return msg.split(' ')[1]
 
 def enterQueue():
     startTime = time.time()
@@ -37,6 +34,29 @@ def enterQueue():
     state['screen'] = searching
     drawBackground()
     draw()
+    msg = tcp.recv(1024)
+    if messageType(msg) == '/BEGIN':
+        state['currentMatch'] = param1(msg)
+        state['ingame'] = True
+        state['inqueue'] = False
+        state['screen'] = board.BACKGROUND_IMAGE
+        drawBackground()
+        requestState()
+        draw()
+        return True
+    return False
+
+def requestState():
+    if state["ingame"]:
+        tcp.send('/STATE')
+        msg = tcp.recv(1024)
+        if messageType('msg') == '/STATE':
+            state['gamestate'] = param1(msg)
+            if state['gamestate']['turn']:
+                dice.drawDice(0)
+            # Draw pieces
+            return True
+    return False
 
 def diceHit((x, y)):
     hitbox = dice.hitbox()
@@ -45,17 +65,20 @@ def diceHit((x, y)):
     return False
 
 def rollDice():
-    tcp.send('/DICE')
-    dice.drawDice(screen, 0)
-    draw()
-    msg = tcp.recv(1024)
-    if messageType(msg) == '/DICE':
-        roll = int(msg.split(' ')[1])
-        dice.drawDice(screen, roll)
-        time.sleep(0.7)
+    if not state['rolling']:
+        state['rolling'] = True
+        tcp.send('/DICE ' + state['currentMatch'])
+        dice.drawDice(screen, 0)
         draw()
-        print roll
-        return roll
+        msg = tcp.recv(1024)
+        if messageType(msg) == '/DICE':
+            roll = param1(msg)
+            dice.drawDice(screen, roll)
+            time.sleep(0.7)
+            draw()
+            print roll
+            return roll
+        return False
     return False
 
 def drawBackground():
@@ -66,6 +89,7 @@ def draw():
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
 # Conecta ao servidor
+ip = '172.27.44.220'
 HOST = ip              # Endereco IP do Servidor
 PORT = 4000            # Porta que o Servidor esta
 tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -104,13 +128,17 @@ startTime = 0.0
 state = {
     'inqueue' : False,
     'ingame' : False,
+    'currentMatch' : '',
     #'screen' : inicialScreen,
+    'rolling': False,
     'screen' : inicialScreen,
-    'gamestate' : []
+    'gamestate' : {}
 }
 
+drawBackground()
+draw()
+
 done = False
-screenChange = True
 screen.fill([255, 255, 255])
 while not done:
     for event in pygame.event.get():
@@ -120,20 +148,21 @@ while not done:
             if (insideStartGame(pygame.mouse.get_pos())) and \
             state['screen'] == inicialScreen:
                 enterQueue()
-            if diceHit(pygame.mouse.get_pos()):
-                roll = rollDice()
-                if roll:
-                    print('Valido')
+
+            if diceHit(pygame.mouse.get_pos()) and \
+            state['screen'] == board.BACKGROUND_IMAGE and \
+            state['ingame']:
+                if state['gamestate']['turn']:
+                    roll = rollDice()
+                    if roll:
+                        state['rolling'] = False
                     # Movement
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
 
-    if screenChange:
-        drawBackground()
-        draw()
-        screenChange = False
+        requestState()
 
 #msg = raw_input()
 #while msg <> '\x18':
