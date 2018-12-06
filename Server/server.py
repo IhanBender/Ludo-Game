@@ -1,7 +1,9 @@
 import socket
 import thread
 import mutex
+import queue 
 import threading
+from state import State
 from user import User
 
 HOST = '192.168.0.8'      # Endereco IP do Servidor
@@ -9,11 +11,41 @@ PORT = 4000              # Porta que o Servidor esta
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
+queueMutex = threading.Lock()
 connectedUsers = []
 currentMatches = []
+userQueue = queue.Queue(maxsize='4')
+
+def isMatch(identifier):
+    for match in currentMatches:
+        if match.identifier == identifier:
+            return True
+
+    return False
+
+def getState(identifier):
+    for match in currentMatches:
+        if match.identifier == identifier:
+            return match.state
+        
+    return False
 
 def messageType(msg):
     return msg.split(' ')[0]
+
+
+def updateUser(user):
+    userMutex.acquire()
+    for i in range(0, len(connectedUsers)):
+        if user.username == connectedUsers[i].username:
+            connectedUsers[i] = user
+
+####
+def createMatch(nickname):
+    # This function has to:
+        # Create Match
+        # Empty queue
+        # Notify other 3 players (somehow)
 
 def conectado(con, cliente):
     global connectedUsers
@@ -23,7 +55,12 @@ def conectado(con, cliente):
     while True:
         msg = con.recv(1024)
         if not msg: break
-        print msg
+
+        # Allways check:
+        # if 
+
+        # Receiving messages
+        # Username message
         if messageType(msg) == '/USERNAME':
             username = msg.split(' ')[1]
             for user in connectedUsers:
@@ -36,7 +73,46 @@ def conectado(con, cliente):
             userMutex.acquire()
             connectedUsers.append(currentUser)
             userMutex.release()
-    
+        
+        elif messageType(msg) == '/QUEUE':
+            if curentUser.inqueue or curentUser.ingame:
+                con.send('/DENY')
+            else:
+                queueMutex.acquire()
+                if userQueue.size() == 3:
+                    queueMutex.release()
+                    con.send('/BEGIN' + ' ' + str(createMatch(currentUser.username)))
+                    currentUser.ingame = True
+
+                else:
+                    userQueue.put(currentUser.username)
+                    queueMutex.release()
+                    con.send('/CONFIRM')
+                    currentUser.inqueue = True
+                
+                updateUser(currentUser)
+
+
+        elif messageType(msg) == '/STATE':
+            # Get parameter
+            currentMatch = msg.split(' ')[1]
+            matchesMutex.acquire()
+            if isMatch(currentMatch):
+                state = getState(currentMatch)
+                matchesMutex.release()
+                con.send('/UPDATE' + ' ' + stateToString(state))
+            else:
+                matchesMutex.release()
+                # There is no such match
+                con.send('/DENY')
+
+        #elif messageType(msg) == '/DICE':
+
+        #elif messageType(msg) == '/MOVE':
+            
+        #elif messageType(msg) == '/EXIT':
+            
+
     
     print 'Finalizando conexao do cliente', cliente
     userMutex.acquire()

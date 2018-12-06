@@ -1,12 +1,36 @@
+from state import State
+import coordinates as c
+import random
+
+RED = 0
+GREEN = 1
+BLUE = 2
+YELLOW = 3
+
 class Match():
-    def __init__(self, players):
+    def __init__(self, players, identifier):
+        self.identifier = identifier
         self.players = players
-        #self.state = 
+        self.state = State(
+            redInitials = c.redInitials,
+            greenInitials = c.greenInitials,
+            blueInitials = c.blueInitials,
+            yellowInitials = c.yellowInitials
+        )
+        # First player
+        self.currentTurn = random.randint(0,3)
+        # 'dice' or 'piece'
+        self.currentPlay = 'dice'
+
+    def nextPlayer(self):
+        if self.currentTurn == 3:
+            self.currentTurn = 0
+        else:
+            self.currentTurn += 1
 
 
-
-        #DOT1 = [357,255]
-#DOT2 = [175 + SQUARE_SIDE * 9 + 2, 75 + SQUARE_SIDE * 6]
-#DOT3 = [175 + SQUARE_SIDE * 6 + 2, 75 + SQUARE_SIDE * 9]
-#DOT4 = [175 + SQUARE_SIDE * 9 + 2, 75 + SQUARE_SIDE * 9]
-#CENTER = [400, 300]
+    def alternatePlay(self):
+        if self.currentPlay == 'dice':
+            self.currentPlay = 'piece'
+        else:
+            self.currentPlay = 'dice'
