@@ -8,7 +8,7 @@ from state import State
 from user import User
 from match import Match
 
-HOST = '192.168.0.16'         # Endereco IP do Servidor
+HOST = '192.168.0.13'         # Endereco IP do Servidor
 PORT = 10000      # Porta que o Servidor esta
 
 MATCH_ID = 0
@@ -51,12 +51,14 @@ def createMatch(nickname):
     matchId = MATCH_ID
     MATCH_ID += 1
 
+    i = 0
     for player in players:
-        readyToPlay.append([player, matchId])
+        readyToPlay.append([player, matchId, i])
+        i += 1
     players[connectedUsers[nickname]] = len(players) + 1
     currentMatches.append(Match(players, matchId))
 
-    return matchId
+    return [matchId, i]
 
 def conectado(con, cliente):
     global connectedUsers
@@ -73,6 +75,7 @@ def conectado(con, cliente):
                     con.send('BEGIN' + ' ' + str(tupla[1]))
                     currentUser.inqueue = False
                     currentUser.ingame = True
+                    currentUser.playerIndex = tupla[2]
                     break
             readyMutex.release()
             # Update user
@@ -144,10 +147,34 @@ def conectado(con, cliente):
 
         # Dice message
         elif messageType(msg) == '/DICE':
-            con.send('/DICE ' + str(random.randint(1, 6)))
+            if(currentUser.username == '' or (not currentUser.ingame)):
+                con.send('/DENY')
+            else:
+                if currentMatches[currentUser.match_id].currentPlay == 'dice' \
+                and currentMatches[currentUser.match_id].state.turn ==  \
+                currentUser.playerIndex:
+                    currentMatches[currentUser.match_id].alternatePlay()
+                    con.send('/DICE ' + str(random.randint(1, 6)))
+                else:
+                    con.send('/DENY')
 
         # Move message
-        #elif messageType(msg) == '/MOVE':
+        elif messageType(msg) == '/MOVE':
+            if(currentUser.username == '' or (not currentUser.ingame) \
+            or currentMatches[currentUser.playerIndex].currentPlay !='piece' \
+            or currentMatches[currentUser.playerIndex].turn != \
+            currentUser.playerIndex):
+                con.send('/DENY')
+            else:
+                movement = msg.split(' ')[1:]
+                if (currentMatches[currentUser.match_id].movePiece(
+                movement, currentUser.playerIndex
+                )):
+                    currentMatches[currentUser.playerIndex].alternatePlay()
+                    currentMatches[currentUser.playerIndex].nextPlayer()
+                else:
+                    con.send('/DENY')
+
 
         # Exit message
         #elif messageType(msg) == '/EXIT':

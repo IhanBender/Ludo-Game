@@ -32,6 +32,13 @@ class Match():
         else:
             self.currentPlay = 'dice'
 
+    # This function has to:
+    # Check movement (if not valid, return false)
+    # Else:
+    # Change gamestate acording to movement
+    def movePiece(self, movement, user):
+        return False
+
     # String to send as a message
     def toString(self):
         # Players first

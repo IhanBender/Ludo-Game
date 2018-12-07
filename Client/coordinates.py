@@ -50,7 +50,7 @@ class Coordinates:
             [415, 257],
             [4395, 275]
         ]
-        
+
         self.SQUARE_SIDE = 30
         self.initialX = 387 - self.SQUARE_SIDE
         self.xValues = [
