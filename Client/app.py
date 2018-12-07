@@ -10,54 +10,7 @@ from coordinates import Coordinates
 import protocol
 import datetime
 import time
-import netifaces as ni
-
-def readState(description):
-    # Divide em uma lista e retira o /STATE
-    description = description.split(' ')[1:]
-    # Players
-    players = []
-    i = 1
-    while description[i] != '\PLAYERS':
-        players.append(description[i])
-        i += 1
-
-    # Current turn
-    currentTurn = description[i]
-    i+=1
-
-    # Current play
-    currentPlay = description[i]
-    i+=1
-
-    # Positions
-    redPositions = [
-        [int(description[i]), int(description[i+1])],
-        [int(description[i+2]), int(description[i+3])],
-        [int(description[i+4]), int(description[i+5])],
-        [int(description[i+6]), int(description[i+7])],
-    ]
-    greenPositions = [
-        [int(description[i+8]), int(description[i+9])],
-        [int(description[i+10]), int(description[i+11])],
-        [int(description[i+12]), int(description[i+13])],
-        [int(description[i+14]), int(description[i+15])],
-    ]
-    bluePositions = [
-        [int(description[i+16]), int(description[i+17])],
-        [int(description[i+18]), int(description[i+19])],
-        [int(description[i+20]), int(description[i+21])],
-        [int(description[i+22]), int(description[i+23])],
-    ]
-    yellowPositions = [
-        [int(description[i+24]), int(description[i+25])],
-        [int(description[i+26]), int(description[i+27])],
-        [int(description[i+28]), int(description[i+29])],
-        [int(description[i+30]), int(description[i+31])],
-    ]
-
-    # A função ainda nao retorna nada
-
+import json
 
 def messageType(msg):
     return msg.split(' ')[0]
@@ -101,13 +54,16 @@ def requestState():
     if state["ingame"]:
         tcp.send('/STATE ' + state['currentMatch'])
         msg = tcp.recv(1024)
-        if messageType('msg') == '/STATE':
-            state['gamestate'] = param1(msg)
-            if state['gamestate']['turn']:
-                dice.drawDice(0)
+        if messageType(msg) == '/UPDATE':
+            state['gamestate'] = json.loads(param1(msg))
+            if isMyTurn():
+                dice.drawDice(screen, 0)
             # Draw pieces
             return True
     return False
+
+def isMyTurn():
+    return str(state['gamestate']['currentTurn']) == str(state['gamestate']['players'][name])
 
 def diceHit((x, y)):
     hitbox = dice.hitbox()
@@ -123,7 +79,7 @@ def rollDice():
         draw()
         msg = tcp.recv(1024)
         if messageType(msg) == '/DICE':
-            roll = param1(msg)
+            roll = int(param1(msg))
             dice.drawDice(screen, roll)
             time.sleep(0.7)
             draw()
@@ -206,7 +162,7 @@ while not done:
             if diceHit(pygame.mouse.get_pos()) and \
             state['screen'] == board.BACKGROUND_IMAGE and \
             state['ingame']:
-                if state['gamestate']['turn']:
+                if isMyTurn():
                     roll = rollDice()
                     if roll:
                         state['rolling'] = False

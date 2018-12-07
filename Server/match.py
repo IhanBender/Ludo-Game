@@ -1,6 +1,7 @@
 from state import State
 from coordinates import Coordinates
 import random
+import json
 
 RED = 0
 GREEN = 1
@@ -17,7 +18,7 @@ class Match():
             greenInitials = self.coords.greenInitials,
             blueInitials = self.coords.blueInitials,
             yellowInitials = self.coords.yellowInitials,
-            turn = random.randint(0,len(self.players))
+            turn = random.randint(1,len(self.players))
         )
         # 'dice' or 'piece'
         self.currentPlay = 'dice'
@@ -34,32 +35,34 @@ class Match():
     # String to send as a message
     def toString(self):
         # Players first
-        description = '/PLAYERS'
+        players = {}
         for player in self.players:
-            description += ' ' + player.username
-        description += ' ' + '\PLAYERS'
+            players[player.username] = len(players) + 1
 
         # Current turn
-        description += ' ' + str(self.state.currentTurn)
+        currentTurn = str(self.state.currentTurn)
         # Current play
         self.currentPlay
 
         # Positions:
         #red
+        red = []
+        green = []
+        yellow = []
+        blue = []
         for i in range(0,4):
-            description += ' ' + str(self.state.redPositions[i][0])     # x
-            description += ' ' + str(self.state.redPositions[i][1])     # y
-        #green
-        for i in range(0,4):
-            description += ' ' + str(self.state.greenPositions[i][0])     # x
-            description += ' ' + str(self.state.greenPositions[i][1])     # y
-        #blue
-        for i in range(0,4):
-                    description += ' ' + str(self.state.bluePositions[i][0])     # x
-                    description += ' ' + str(self.state.bluePositions[i][1])     # y
-        #yellow
-        for i in range(0,4):
-                    description += ' ' + str(self.state.yellowPositions[i][0])     # x
-                    description += ' ' + str(self.state.yellowPositions[i][1])     # y
+            red.append((str(self.state.redPositions[i][0]), str(self.state.redPositions[i][1])))
+            green.append((str(self.state.greenPositions[i][0]), str(self.state.greenPositions[i][1])))
+            blue.append((str(self.state.bluePositions[i][0]), str(self.state.bluePositions[i][1])))
+            yellow.append((str(self.state.yellowPositions[i][0]), str(self.state.yellowPositions[i][1])))
 
+        description = {
+            'players': players,
+            'currentTurn': currentTurn,
+            'red': red,
+            'green': green,
+            'blue': blue,
+            'yellow': yellow
+        }
+        description = json.dumps(description).replace(" ", "")
         return description

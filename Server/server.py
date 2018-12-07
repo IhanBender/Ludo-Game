@@ -12,7 +12,7 @@ HOST = '192.168.0.16'         # Endereco IP do Servidor
 PORT = 10000      # Porta que o Servidor esta
 
 MATCH_ID = 0
-MAX_QUEUE_SIZE = 2
+MAX_QUEUE_SIZE = 1
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
@@ -25,15 +25,15 @@ userQueue = Queue(maxsize=MAX_QUEUE_SIZE)
 
 def isMatch(identifier):
     for match in currentMatches:
-        if match.identifier == identifier:
+        if str(match.identifier) == str(identifier):
             return True
 
     return False
 
 def getState(identifier):
     for match in currentMatches:
-        if match.identifier == identifier:
-            return match.state
+        if str(match.identifier) == str(identifier):
+            return match
 
     return False
 
@@ -45,17 +45,18 @@ def updateUser(user):
 
 def createMatch(nickname):
     global MATCH_ID
-    players = []
+    players = {}
     for i in range(0, MAX_QUEUE_SIZE):
-        players.append(connectedUsers[userQueue.get()])
+        players[connectedUsers[userQueue.get()]] = len(players) + 1
     matchId = MATCH_ID
     MATCH_ID += 1
 
     for player in players:
         readyToPlay.append([player, matchId])
-    players.append(connectedUsers[nickname])
+    players[connectedUsers[nickname]] = len(players) + 1
     currentMatches.append(Match(players, matchId))
 
+    return matchId
 
 def conectado(con, cliente):
     global connectedUsers
@@ -133,9 +134,9 @@ def conectado(con, cliente):
                 currentMatch = msg.split(' ')[1]
                 matchesMutex.acquire()
                 if isMatch(currentMatch):
-                    state = getState(currentMatch)
+                    stat = getState(currentMatch)
                     matchesMutex.release()
-                    con.send('/UPDATE' + ' ' + state.toString())
+                    con.send('/UPDATE ' + stat.toString())
                 else:
                     matchesMutex.release()
                     # There is no such match
@@ -155,7 +156,7 @@ def conectado(con, cliente):
 
     print 'Finalizando conexao do cliente', cliente
     userMutex.acquire()
-    del connectedUsers[currentUser]
+    del connectedUsers[currentUser.username]
     userMutex.release()
 
     con.close()
