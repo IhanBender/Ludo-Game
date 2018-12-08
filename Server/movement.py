@@ -45,11 +45,12 @@ def movePiece(position, moves, color):
         fst = yelFst
         final = yelFinal
     # Error
-    else return -1
+    else:
+        return -1
 
     # Zona Critica de Entrada
-    if position <= cmax and >= cmax - 5:
-        if moves == 6 and position = cmax:
+    if position <= cmax and position >= cmax - 5:
+        if moves == 6 and position == cmax:
             return final
         return fst + ((position + moves) % cmax)
     # Acerto

@@ -96,9 +96,9 @@ def draw():
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
 # Conecta ao servidor
-ip = '192.168.0.13'
+ip = '192.168.0.102'
 HOST = ip              # Endereco IP do Servidor
-PORT = 10000       # Porta que o Servidor esta
+PORT = 5000       # Porta que o Servidor esta
 tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 dest = (HOST, PORT)
 # Tenta conectar ao servidor

@@ -8,11 +8,11 @@ from state import State
 from user import User
 from match import Match
 
-HOST = '192.168.0.13'         # Endereco IP do Servidor
-PORT = 10000      # Porta que o Servidor esta
+HOST = '192.168.0.102'         # Endereco IP do Servidor
+PORT = 5000      # Porta que o Servidor esta
 
 MATCH_ID = 0
-MAX_QUEUE_SIZE = 1
+MAX_QUEUE_SIZE = 2
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
@@ -66,22 +66,6 @@ def conectado(con, cliente):
     print 'Conectado por', cliente
 
     while True:
-        # Allways check:
-        # If inqueue, if found match
-        if currentUser.inqueue:
-            readyMutex.acquire()
-            for tupla in readyToPlay:
-                if tupla[0].username == currentUser.username:
-                    con.send('BEGIN' + ' ' + str(tupla[1]))
-                    currentUser.inqueue = False
-                    currentUser.ingame = True
-                    currentUser.playerIndex = tupla[2]
-                    break
-            readyMutex.release()
-            # Update user
-            userMutex.acquire()
-            updateUser(currentUser)
-            userMutex.release()
 
         # handle message
         msg = con.recv(1024)
@@ -123,6 +107,21 @@ def conectado(con, cliente):
                     queueMutex.release()
                     con.send('/CONFIRM')
                     currentUser.inqueue = True
+                    # Update user
+                    userMutex.acquire()
+                    updateUser(currentUser)
+                    userMutex.release()
+                    # Waits for game start
+                    while currentUser.inqueue:
+                        readyMutex.acquire()
+                        for tupla in readyToPlay:
+                            if tupla[0].username == currentUser.username:
+                                con.send('/BEGIN' + ' ' + str(tupla[1]))
+                                currentUser.inqueue = False
+                                currentUser.ingame = True
+                                currentUser.playerIndex = tupla[2]
+                                break
+                        readyMutex.release()
 
                 userMutex.acquire()
                 updateUser(currentUser)
@@ -159,6 +158,7 @@ def conectado(con, cliente):
                     con.send('/DENY')
 
         # Move message
+        # /MOVE piece dice
         elif messageType(msg) == '/MOVE':
             if(currentUser.username == '' or (not currentUser.ingame) \
             or currentMatches[currentUser.playerIndex].currentPlay !='piece' \
@@ -172,13 +172,14 @@ def conectado(con, cliente):
                 )):
                     currentMatches[currentUser.playerIndex].alternatePlay()
                     currentMatches[currentUser.playerIndex].nextPlayer()
+                    con.send("/CONFIRM")
                 else:
                     con.send('/DENY')
 
 
         # Exit message
-        #elif messageType(msg) == '/EXIT':
-
+        elif messageType(msg) == '/EXIT':
+            break
 
 
     print 'Finalizando conexao do cliente', cliente
