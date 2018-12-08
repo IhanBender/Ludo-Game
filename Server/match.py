@@ -2,27 +2,36 @@ from state import State
 from coordinates import Coordinates
 import random
 import movement
+import random
 import json
 
-RED = 0
-GREEN = 1
-BLUE = 2
-YELLOW = 3
+#RED = 0
+#GREEN = 1
+#BLUE = 2
+#YELLOW = 3
 
 class Match():
-    def __init__(self, players, identifier):
+    def __init__(self, players):
+
+        self.ended = False
         self.coords = Coordinates()
-        self.identifier = identifier
+        self.diceValue = 0
         self.players = players
+        self.isActive = []
+        self.turn = random.randint(0,len(self.players) - 1)
+        # 'dice' or 'piece'
+        self.currentPlay = 'dice'
         self.state = State(
             redInitials = self.coords.redInitials,
             greenInitials = self.coords.greenInitials,
             blueInitials = self.coords.blueInitials,
             yellowInitials = self.coords.yellowInitials,
-            turn = random.randint(1,len(self.players))
         )
-        # 'dice' or 'piece'
-        self.currentPlay = 'dice'
+
+        # Inicially, all players are active
+        for i in range(0, len(self.players)):
+            self.isActive.append(True)
+
 
     # Not the fastest way, but the cleanest way
     def handleCollision(self, nextPosition, color):
@@ -47,20 +56,16 @@ class Match():
                     self.state.yellowPositions[i] = self.coords.yellowInitials[i]
                     return
 
-    def nextPlayer(self):
-        self.state.nextPlayer(len(self.players))
-
     def alternatePlay(self):
         if self.currentPlay == 'dice':
             self.currentPlay = 'piece'
         else:
             self.currentPlay = 'dice'
 
-    def movePiece(self, move, user):
-        # movement = [piece, dice]
-        piece = int(move[0])
-        dice = int(move[1])
+    def movePiece(self, pieceIndex, user):
+        piece = int(pieceIndex)
 
+        # Getting info based on user
         if user == 0:
             color = 'red'
             positions = self.state.redPositions
@@ -99,7 +104,7 @@ class Match():
             ]
             position = self.state.yellowPositions[piece]
 
-        nextPosition = movement.movePiece(position, dice, color)
+        nextPosition = movement.movePiece(position, self.diceValue, color)
 
         # Checks if another piece from the same color is there
         for pos in positions:
@@ -109,6 +114,7 @@ class Match():
 
         # Checks if another piece from another color is there
         self.handleCollision(nextPosition, color)
+
         # Updates state
         if color == 'red':
             self.state.redPositions[piece] = nextPosition
@@ -118,22 +124,46 @@ class Match():
             self.state.bluePositions[piece] = nextPosition
         elif color == 'yellow':
             self.state.yellowPositions[piece] = nextPosition
+
+        # Since movement is valid, can update some important values
+        self.nextPlayer()
+        self.alternatePlay()
+
         return True
+
+    def generateDice(self):
+        self.diceValue = random.randint(1,6)
+
+    def nextPlayer(self):
+        if self.turn == len(self.players) - 1:
+            self.turn = 0
+        else:
+            self.turn += 1
+
+        # Deals with afk/disconnected players
+        if not self.isActive[self.turn]:
+            self.nextPlayer()
+
+    def quit(self, user):
+        if self.turn == user:
+            self.currentPlay = 'dice'
+
+        self.isActive[user] = False
+        self.nextPlayer()
+
 
     # String to send as a message
     def toString(self):
         # Players first
         players = {}
         for player in self.players:
-            players[player.username] = len(players) + 1
+            players[player.username] = len(players)
 
         # Current turn
-        currentTurn = str(self.state.currentTurn)
+        currentTurn = str(self.turn)
         # Current play
-        self.currentPlay
-
+        currentPlay = self.currentPlay
         # Positions:
-        #red
         red = []
         green = []
         yellow = []
@@ -147,6 +177,7 @@ class Match():
         description = {
             'players': players,
             'currentTurn': currentTurn,
+            'currentPlay': currentPlay,
             'red': red,
             'green': green,
             'blue': blue,

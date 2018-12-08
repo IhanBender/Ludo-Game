@@ -1,7 +1,6 @@
 class User:
 
-    def __init__(self, cliente, username):
-        self.cliente = cliente
+    def __init__(self, username):
         self.username = username
         self.inqueue = False
         self.ingame = False

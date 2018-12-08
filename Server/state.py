@@ -1,18 +1,16 @@
 class State:
 
     def __init__(self,
-    redInitials,
-    greenInitials,
-    blueInitials,
-    yellowInitials,
-    turn):
+        redInitials,
+        greenInitials,
+        blueInitials,
+        yellowInitials
+    ):
 
         self.redPositions = redInitials
         self.greenPositions = greenInitials
         self.bluePositions = blueInitials
         self.yellowPositions = yellowInitials
-        self.currentTurn = turn
-        # Still has to define players colors
 
     def updatePosition(self, color, piece, (x, y)):
         if  color == 'red':
@@ -23,9 +21,3 @@ class State:
             self.bluePositions[piece] = [x, y]
         elif color == 'yellow':
             self.yellowPositions[piece] = [x, y]
-
-    def nextPlayer(self, player_num):
-        if self.currentTurn == player_num - 1:
-            self.currentTurn = 1
-        else:
-            self.currentTurn += 1
