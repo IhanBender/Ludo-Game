@@ -7,10 +7,13 @@ from board import Board
 from pieceDrawer import PieceDrawer
 from dice import Dice
 from coordinates import Coordinates
-import protocol
 import datetime
 import time
 import json
+
+HOST = '192.168.0.111'  # Endereco IP do Servidor
+PORT = 7000       # Porta que o Servidor esta
+
 
 def messageType(msg):
     return msg.split(' ')[0]
@@ -24,27 +27,33 @@ def param1(msg):
     return msg.split(' ')[1]
 
 def enterQueue():
-    startTime = time.time()
-    tcp.send(protocol.QueueMessage())
+    #startTime = time.time()
+    tcp.send('/QUEUE')
     print "Buscando Partida"
     msg = tcp.recv(1024)
+    print(msg)
     if messageType(msg) == '/CONFIRM':
         state['inqueue'] = True
+        # Animação
         state['screen'] = searchClick
         drawBackground()
         draw()
+        # Tela de buscando partida
         state['screen'] = searching
         drawBackground()
         draw()
         return True
     elif messageType(msg) == '/BEGIN':
         enterGame(param1(msg))
+        return True
+
     return False
 
 def enterGame(currentMatch):
     print "Partida encontrada"
     state['currentMatch'] = currentMatch
     state['ingame'] = True
+    state['inqueue'] = False
     state['screen'] = board.BACKGROUND_IMAGE
     drawBackground()
     requestState()
@@ -52,12 +61,14 @@ def enterGame(currentMatch):
 
 def requestState():
     if state["ingame"]:
-        tcp.send('/STATE ' + state['currentMatch'])
+        tcp.send('/STATE')
         msg = tcp.recv(1024)
         if messageType(msg) == '/UPDATE':
             state['gamestate'] = json.loads(param1(msg))
             if isMyTurn():
                 dice.drawDice(screen, 0)
+                peca = raw_input('Escolha a peça para mexer')
+                tcp.send('/MOVE ' +peca)
 
             # Draw pieces
             for position in state['gamestate']['red']:
@@ -95,14 +106,13 @@ def diceHit((x, y)):
     return False
 
 def pieceHit((x, y)):
-    print (state['gamestate']['playerIndex'])
-    if state['gamestate']['playerIndex'] == 0:
+    if state['currentMatch'] == 0:
         positions = state['gamestate']['red']
-    elif state['gamestate']['playerIndex'] == 1:
+    elif state['currentMatch'] == 1:
         positions = state['gamestate']['green']
-    elif state['gamestate']['playerIndex'] == 2:
+    elif state['currentMatch'] == 2:
         positions = state['gamestate']['blue']
-    else: #state['gamestate']['playerIndex'] == 3
+    else: #state['currentMatch'] == 3
         positions = state['gamestate']['yellow']
 
     for i in range(0,4):
@@ -144,9 +154,6 @@ def draw():
 
 name = raw_input('Por favor, digite o seu nome de usuário: ')
 # Conecta ao servidor
-ip = '192.168.0.102'
-HOST = ip              # Endereco IP do Servidor
-PORT = 5000       # Porta que o Servidor esta
 tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 dest = (HOST, PORT)
 # Tenta conectar ao servidor
@@ -159,11 +166,11 @@ while True:
     tcp.send('/USERNAME ' + name)
     print ("Waiting answer")
     msg = tcp.recv(1024)
-    if not msg: break
+
     if msg.split(' ')[0] == '/DENY':
         name = raw_input('Nome de usuário já utilizado, digite um novo: ')
     elif msg.split(' ')[0] == '/CONFIRM':
-        print("Bem vindo ao jogo " + name)
+        print("Bem vindo ao jogo, " + name)
         break
 
 # Inicializa jogo
@@ -183,8 +190,6 @@ startTime = 0.0
 state = {
     'inqueue' : False,
     'ingame' : False,
-    'currentMatch' : '',
-    #'screen' : inicialScreen,
     'rolling': False,
     'screen' : inicialScreen,
     'gamestate' : {}
@@ -222,20 +227,18 @@ while not done:
         if  (pygame.mouse.get_pressed()[0] == 1):
             if (insideStartGame(pygame.mouse.get_pos())) and \
             state['screen'] == inicialScreen:
-                if enterQueue():
+                if enterQueue() and state['inqueue']:
                     msg = tcp.recv(1024)
                     if messageType(msg) == '/BEGIN':
                         enterGame(param1(msg))
-                    elif messageType(msg) == '/CONFIRM':
-                        msg = tcp.recv(1024)
-                        if messageType(msg) == '/BEGIN':
-                            enterGame(param1(msg))
+
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                # Sai da partida (se tiver)
                 tcp.send('/EXIT')
+                # Sinaliza saida do loop principal
                 done = True
-
 
         requestState()
 

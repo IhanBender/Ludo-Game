@@ -157,7 +157,7 @@ class Match():
         # Players first
         players = {}
         for player in self.players:
-            players[player.username] = len(players)
+            players[player] = len(players)
 
         # Current turn
         currentTurn = str(self.turn)

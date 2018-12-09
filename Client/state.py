@@ -1,8 +1,8 @@
 class State:
-    def __init__(self, 
-    redInitials, 
-    greenInitials, 
-    blueInitials, 
+    def __init__(self,
+    redInitials,
+    greenInitials,
+    blueInitials,
     yellowInitials,
     turn):
 
@@ -16,7 +16,7 @@ class State:
     def updatePosition(self, color, piece, (x, y)):
         if  color == 'red':
             self.redPositions[piece] = [x, y]
-        elif color == 'green':     
+        elif color == 'green':
             self.greenPositions[piece] = [x, y]
         elif color == 'blue':
             self.bluePositions[piece] = [x, y]

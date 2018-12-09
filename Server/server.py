@@ -7,24 +7,22 @@ from state import State
 from user import User
 from match import Match
 
-HOST = '192.168.0.102'         # Endereco IP do Servidor
-PORT = 5000      # Porta que o Servidor esta
+HOST = '192.168.0.111'         # Endereco IP do Servidor
+PORT = 7000      # Porta que o Servidor esta
 
 MATCH_ID_COUNT = 0
 MATCH_ID_REUSABLE = []
 
-MAX_QUEUE_SIZE = 2
+MATCH_SIZE = 2
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
-queueMutex = threading.Lock()
 connectedUsers = {}
-currentMatches = {}
-userQueue = Queue(maxsize=MAX_QUEUE_SIZE)
-
+currentMatches = []
+userQueue = Queue(maxsize=0)
 
 def checkMatchExistance(match_id):
-    return (True in currrentMaches[match_id].isActive)
+    return (True in currentMatches[match_id].isActive)
 
 def getNewMatchId():
     global MATCH_ID_COUNT
@@ -56,16 +54,24 @@ def createMatch():
 
     # Define match players
     players = {}
-    for i in range(1, MAX_QUEUE_SIZE):
+    for i in range(0, MATCH_SIZE):
         player = userQueue.get()
         # Add to match list
-        players[player.username] = i
-        # Inform that is ingame
-        connectedUsers[player.username].inqueue = False
-        connectedUsers[player.username].ingame = True
+        players[player] = i
+        userMutex.acquire()
         # Inform match id and players index
-        connectedUsers[player.username].match_id = matchId
-        connectedUsers[player.username].playerIndex = i
+        connectedUsers[player].match_id = matchId
+        connectedUsers[player].playerIndex = i
+        # Inform that is ingame
+        connectedUsers[player].ingame = True
+        connectedUsers[player].inqueue = False
+        userMutex.release()
+
+    if len(currentMatches) > matchId:
+        currentMatches[matchId] = Match(players)
+    else:
+        currentMatches.append(Match(players))
+
 
 def conectado(con, cliente):
     global connectedUsers
@@ -98,14 +104,10 @@ def conectado(con, cliente):
             if currentUser.inqueue or currentUser.ingame or currentUser.username == '':
                 con.send('/DENY')
             else:
-                queueMutex.acquire()
                 userQueue.put(currentUser.username)
-                if userQueue.full:
+                if userQueue.qsize() == MATCH_SIZE:
                     createMatch()
-                    queueMutex.release()
                 else:
-                    userQueue.put(currentUser.username)
-                    queueMutex.release()
                     currentUser.inqueue = True
                     # Update user
                     userMutex.acquire()
@@ -116,8 +118,11 @@ def conectado(con, cliente):
                     while currentUser.inqueue:
                         pass
 
+                print 'Sending begin to ', cliente
+                userMutex.acquire()
                 currentUser = connectedUsers[currentUser.username]
-                con.send('/BEGIN ' + currentUser.match_id)
+                userMutex.release()
+                con.send('/BEGIN ' + str(currentUser.match_id))
 
         # State message
         elif messageType(msg) == '/STATE':
@@ -137,14 +142,14 @@ def conectado(con, cliente):
             else:
                 matchesMutex.acquire()
                 if currentMatches[currentUser.match_id].currentPlay == 'dice' \
-                and currentMatches[currentUser.match_id].state.turn ==  \
+                and currentMatches[currentUser.match_id].turn ==  \
                 currentUser.playerIndex:
                     currentMatches[currentUser.match_id].alternatePlay()
                     currentMatches[currentUser.match_id].generateDice()
-                    currentMatches.release()
+                    matchesMutex.release()
                     con.send('/CONFIRM')
                 else:
-                    currentMatches.release()
+                    matchesMutex.release()
                     con.send('/DENY')
 
         # Move message
