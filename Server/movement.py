@@ -36,6 +36,13 @@ yelFinal = 79
 
 
 def movePiece(position, moves, color, coords):
+    index = 0
+    for i in range(0, len(coords.xValues)):
+        if position[0] == coords.xValues[i] \
+        and position[1] == coords.yValues[i]:
+            index = i
+            break
+
     if color == "green":
         cmax = grnMax
         fst = grnFst
@@ -66,21 +73,25 @@ def movePiece(position, moves, color, coords):
 
     # Verifica se esta em uma das posições iniciais
     if position in initials:
-        return init + moves
+        print position
+        print initials
+        print("In initials")
+        return init + moves - 1
+        
 
     # Zona Critica de Entrada
-    if position <= cmax and position >= cmax - 5:
-        if moves == 6 and position == cmax:
+    if index <= cmax and index >= cmax - 5:
+        if moves == 6 and index == cmax:
             return final
-        return fst + ((position + moves) % cmax)
+        return fst + ((index + moves) % cmax)
     # Acerto
-    if position + moves == fst + 5:
+    if index + moves == fst + 5:
         return final
     # Move back
-    if position + moves > fst + 5:
-        return (fst + 5) - (position + moves) % (fst + 5)
+    if index + moves > fst + 5:
+        return (fst + 5) - (index + moves) % (fst + 5)
     # Zona Critica de Map Loop
-    if position + moves > 55:
-        return (position + moves) %  55
+    if index + moves > 55:
+        return (index + moves) %  55
     # Default
-    return position + moves
+    return index + moves

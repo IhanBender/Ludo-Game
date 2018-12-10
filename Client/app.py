@@ -11,8 +11,8 @@ import datetime
 import time
 import json
 
-HOST = '192.168.0.13'  # Endereco IP do Servidor
-PORT = 4000       # Porta que o Servidor esta
+HOST = '192.168.0.8'  # Endereco IP do Servidor
+PORT = 6000       # Porta que o Servidor esta
 
 
 def messageType(msg):

@@ -93,7 +93,12 @@ class Match():
             positions = self.state.yellowPositions
             position = self.state.yellowPositions[piece]
 
-        nextPosition = movement.movePiece(position, self.diceValue, color, self.coords)
+        nextPosition = movement.movePiece(
+            position,
+            self.diceValue, 
+            color, 
+            self.coords
+        )
 
         # Checks if another piece from the same color is there
         for p in positions:
