@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-import socket
+from coordinates import Coordinates
+
 def redStart():
     return 0
 
@@ -10,43 +14,59 @@ def blueStart():
 def yellowStart():
     return 42
 
+redInit = 0
 redMax = 55
 redFst = 56
 redFinal = 76
 
+grnInit = 14
 grnMax = 13
 grnFst = 61
 grnFinal = 77
 
+bluInit = 28
 bluMax = 27
 bluFst = 66
 bluFinal = 78
 
+yelInit = 42
 yelMax = 41
 yelFst = 71
 yelFinal = 79
 
 
-def movePiece(position, moves, color):
+def movePiece(position, moves, color, coords):
     if color == "green":
         cmax = grnMax
         fst = grnFst
         final = grnFinal
+        init = grnInit
+        initials = coords.greenInitials
     elif color == "red":
         cmax = redMax
         fst = redFst
         final = redFinal
+        init = redInit
+        initials = coords.redInitials
     elif color == "blue":
         cmax = bluMax
         fst = bluFst
         final = bluFinal
+        init = bluInit
+        initials = coords.blueInitials
     elif color == "yellow":
         cmax = yelMax
         fst = yelFst
         final = yelFinal
+        init = yelInit
+        initials = coords.yellowInitials
     # Error
     else:
         return -1
+
+    # Verifica se esta em uma das posições iniciais
+    if position in initials:
+        return init + moves
 
     # Zona Critica de Entrada
     if position <= cmax and position >= cmax - 5:

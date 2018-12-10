@@ -7,8 +7,8 @@ from state import State
 from user import User
 from match import Match
 
-HOST = '192.168.0.111'         # Endereco IP do Servidor
-PORT = 7000      # Porta que o Servidor esta
+HOST = '192.168.0.13'         # Endereco IP do Servidor
+PORT = 4000      # Porta que o Servidor esta
 
 MATCH_ID_COUNT = 0
 MATCH_ID_REUSABLE = []
@@ -40,7 +40,7 @@ def getNewMatchId():
 def endMatch(value):
     global MATCH_ID_REUSABLE
     MATCH_ID_REUSABLE.append(value)
-    currentMatches.pop(value)
+    #currentMatches.pop(value)
 
 def messageType(msg):
     return msg.split(' ')[0]
@@ -131,7 +131,9 @@ def conectado(con, cliente):
                 con.send('/DENY')
             else:
                 matchesMutex.acquire()
-                description = currentMatches[currentUser.match_id].toString()
+                description = currentMatches[currentUser.match_id].toString(
+                    currentUser.playerIndex
+                )
                 matchesMutex.release()
                 con.send('/UPDATE ' + description)
 
@@ -154,10 +156,11 @@ def conectado(con, cliente):
 
         # Move message
         elif messageType(msg) == '/MOVE':
+            print ('received move request')
             matchesMutex.acquire()
             if(currentUser.username == '' or (not currentUser.ingame) \
-            or currentMatches[currentUser.playerIndex].currentPlay !='piece' \
-            or currentMatches[currentUser.playerIndex].turn != \
+            or currentMatches[currentUser.match_id].currentPlay !='piece' \
+            or currentMatches[currentUser.match_id].turn != \
             currentUser.playerIndex):
                 matchesMutex.release()
                 con.send('/DENY')
@@ -180,7 +183,7 @@ def conectado(con, cliente):
                 con.send('/DENY')
             else:
                 matchesMutex.acquire()
-                currentMatches[currentUser.match_id].quit()
+                currentMatches[currentUser.match_id].quit(currentUser.playerIndex)
                 if checkMatchExistance(currentUser.match_id):
                     endMatch(currentUser.match_id)
                 matchesMutex.release()
@@ -190,12 +193,17 @@ def conectado(con, cliente):
                 updateUser(currentUser)
 
 
-
     print 'Finalizando conexao do cliente', cliente
+    matchesMutex.acquire()
+    if currentUser.ingame:
+        currentMatches[currentUser.match_id].quit(currentUser.playerIndex)
+        if not checkMatchExistance(currentUser.match_id):
+            endMatch(currentUser.match_id)
+    matchesMutex.release()
+
     userMutex.acquire()
     del connectedUsers[currentUser.username]
     userMutex.release()
-
     con.close()
     thread.exit()
 

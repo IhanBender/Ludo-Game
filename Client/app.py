@@ -11,8 +11,8 @@ import datetime
 import time
 import json
 
-HOST = '192.168.0.111'  # Endereco IP do Servidor
-PORT = 7000       # Porta que o Servidor esta
+HOST = '192.168.0.13'  # Endereco IP do Servidor
+PORT = 4000       # Porta que o Servidor esta
 
 
 def messageType(msg):
@@ -31,7 +31,6 @@ def enterQueue():
     tcp.send('/QUEUE')
     print "Buscando Partida"
     msg = tcp.recv(1024)
-    print(msg)
     if messageType(msg) == '/CONFIRM':
         state['inqueue'] = True
         # Animação
@@ -64,40 +63,48 @@ def requestState():
         tcp.send('/STATE')
         msg = tcp.recv(1024)
         if messageType(msg) == '/UPDATE':
+            oldstate = state['gamestate']
             state['gamestate'] = json.loads(param1(msg))
-            if isMyTurn():
-                dice.drawDice(screen, 0)
-                peca = raw_input('Escolha a peça para mexer')
-                tcp.send('/MOVE ' +peca)
 
-            # Draw pieces
-            for position in state['gamestate']['red']:
-                if position in coords.redFinals:
-                    piecedrawer.drawRedPiece(screen, position, 15)
-                else:
-                    piecedrawer.drawRedPiece(screen, position, 30)
-            for position in state['gamestate']['green']:
-                if position in coords.greenFinals:
-                    piecedrawer.drawGreenPiece(screen, position, 15)
-                else:
-                    piecedrawer.drawGreenPiece(screen, position, 30)
-            for position in state['gamestate']['blue']:
-                if position in coords.blueFinals:
-                    piecedrawer.drawBluePiece(screen, position, 15)
-                else:
-                    piecedrawer.drawBluePiece(screen, position, 30)
-            for position in state['gamestate']['yellow']:
-                if position in coords.yellowFinals:
-                    piecedrawer.drawYellowPiece(screen, position, 15)
-                else:
-                    piecedrawer.drawYellowPiece(screen, position, 30)
+            if oldstate != state['gamestate']:
+                drawBackground()
+                # Draw dice with value
+                if isMyTurn():
+                    if state['gamestate']['currentPlay'] == 'dice':
+                        dice.drawDice(screen, 0)
+                    else:
+                        dice.drawDice(screen,int(state['gamestate']['dice']))
+
+                # Draw pieces
+                for position in state['gamestate']['red']:
+                    if position in coords.redFinals:
+                        piecedrawer.drawRedPiece(screen, position, 15)
+                    else:
+                        piecedrawer.drawRedPiece(screen, position, 30)
+                for position in state['gamestate']['green']:
+                    if position in coords.greenFinals:
+                        piecedrawer.drawGreenPiece(screen, position, 15)
+                    else:
+                        piecedrawer.drawGreenPiece(screen, position, 30)
+                for position in state['gamestate']['blue']:
+                    if position in coords.blueFinals:
+                        piecedrawer.drawBluePiece(screen, position, 15)
+                    else:
+                        piecedrawer.drawBluePiece(screen, position, 30)
+                for position in state['gamestate']['yellow']:
+                    if position in coords.yellowFinals:
+                        piecedrawer.drawYellowPiece(screen, position, 15)
+                    else:
+                        piecedrawer.drawYellowPiece(screen, position, 30)
+
+                draw()
 
             return True
     return False
 
 def isMyTurn():
     return str(state['gamestate']['currentTurn']) \
-    == str(state['gamestate']['players'][name])
+    == str(state['gamestate']['playerIndex'])
 
 def diceHit((x, y)):
     hitbox = dice.hitbox()
@@ -106,18 +113,20 @@ def diceHit((x, y)):
     return False
 
 def pieceHit((x, y)):
-    if state['currentMatch'] == 0:
+    pIndex = int(state['gamestate']['playerIndex'])
+    if pIndex == 0:
         positions = state['gamestate']['red']
-    elif state['currentMatch'] == 1:
+    elif pIndex == 1:
         positions = state['gamestate']['green']
-    elif state['currentMatch'] == 2:
+    elif pIndex == 2:
         positions = state['gamestate']['blue']
-    else: #state['currentMatch'] == 3
+    else: #pIndex
         positions = state['gamestate']['yellow']
 
+    #print positions
     for i in range(0,4):
-        if x > positions[i][0] and x < positions[i][0] + coords.SQUARE_SIDE \
-        and y > positions[i][1] and y < positions[i][1] + coords.SQUARE_SIDE:
+        if x > int(positions[i][0]) and x < int(positions[i][0]) + coords.SQUARE_SIDE \
+        and y > int(positions[i][1]) and y < int(positions[i][1]) + coords.SQUARE_SIDE:
             return i
 
     return -1
@@ -125,16 +134,20 @@ def pieceHit((x, y)):
 def rollDice():
     if not state['rolling']:
         state['rolling'] = True
-        tcp.send('/DICE ' + state['currentMatch'])
-        dice.drawDice(screen, 0)
-        draw()
+        tcp.send('/DICE')
         msg = tcp.recv(1024)
-        if messageType(msg) == '/DICE':
-            roll = int(param1(msg))
-            dice.drawDice(screen, roll)
-            time.sleep(0.7)
+        if messageType(msg) == '/CONFIRM':
+            dice.drawDice(screen, 0)
             draw()
-            return roll
+            tcp.send('/STATE')
+            msg = tcp.recv(1024)
+            if messageType(msg) == '/UPDATE':
+                state['gamestate'] = json.loads(param1(msg))
+                dice.drawDice(screen, int(state['gamestate']['dice']))
+                time.sleep(0.7)
+                draw()
+                return True
+
         return False
     return False
 
@@ -205,26 +218,9 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
 
-        if diceHit(pygame.mouse.get_pos()) and \
-            state['screen'] == board.BACKGROUND_IMAGE and \
-            state['ingame']:
-                if isMyTurn() and state['gamestate']['currentPlay'] == 'dice':
-                    roll = rollDice()
-                    if roll:
-                        state['rolling'] = False
-
-        if state['screen'] == board.BACKGROUND_IMAGE and \
-            state['ingame'] and \
-            pieceHit(pygame.mouse.get_pos()) != -1:
-                piece = pieceHit(pygame.mouse.get_pos())
-                if isMyTurn() and state['gamestate']['currentPlay'] == 'move':
-                    move = movePiece(piece)
-                    #if move:
-                        # Informe usuário que a jogada foi bem sucedida
-                    #else:
-                        # Informe que deve fazer outra jogada
-
+        # Mouse pressed events
         if  (pygame.mouse.get_pressed()[0] == 1):
+            # Buscar partida
             if (insideStartGame(pygame.mouse.get_pos())) and \
             state['screen'] == inicialScreen:
                 if enterQueue() and state['inqueue']:
@@ -232,6 +228,25 @@ while not done:
                     if messageType(msg) == '/BEGIN':
                         enterGame(param1(msg))
 
+            # Rolar dado
+            if diceHit(pygame.mouse.get_pos()) and \
+            state['screen'] == board.BACKGROUND_IMAGE and \
+            state['ingame']:
+                if isMyTurn() and state['gamestate']['currentPlay'] == 'dice':
+                    roll = rollDice()
+                    if roll:
+                        state['rolling'] = False
+            # Mover peça
+            if state['screen'] == board.BACKGROUND_IMAGE and \
+            state['ingame']:
+                piece_hit = pieceHit(pygame.mouse.get_pos())
+                if piece_hit != -1:
+                    if isMyTurn() and state['gamestate']['currentPlay'] == 'piece':
+                        move = movePiece(piece_hit)
+                        #if move:
+                            # Informe usuário que a jogada foi bem sucedida
+                        #else:
+                            # Informe que deve fazer outra jogada
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -239,6 +254,7 @@ while not done:
                 tcp.send('/EXIT')
                 # Sinaliza saida do loop principal
                 done = True
+
 
         requestState()
 
