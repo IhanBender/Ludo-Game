@@ -38,32 +38,36 @@ class Match():
             self.isActive.append(False)
 
 
-    # Not the fastest way, but the cleanest way
     def handleCollision(self, nextPosition, color):
         position = [
             self.coords.xValues[nextPosition],
             self.coords.yValues[nextPosition]
         ]
 
-        for i in range(0,4):
-            if position == self.state.redPositions[i]:
-                self.state.redPositions[i] = self.coords.redInitials[i]
-                return
+        if color != 'red':
+            for i in range(0,4):
+                if position == self.state.redPositions[i]:
+                    self.state.redPositions[i] = self.coords.redInitials[i]
+                    return
 
-        for i in range(0,4):
-            if position == self.state.greenPositions[i]:
-                self.state.greenPositions[i] = self.coords.greenInitials[i]
-                return
+        if color != 'green':
+            for i in range(0,4):
+                if position == self.state.greenPositions[i]:
+                    self.state.greenPositions[i] = self.coords.greenInitials[i]
+                    return
 
-        for i in range(0,4):
-            if position == self.state.bluePositions[i]:
-                self.state.bluePositions[i] = self.coords.blueInitials[i]
-                return
+        if color != 'blue':
+            for i in range(0,4):
+                if position == self.state.bluePositions[i]:
+                    self.state.bluePositions[i] = self.coords.blueInitials[i]
+                    return
 
-        for i in range(0,4):
-            if position == self.state.yellowPositions[i]:
-                self.state.yellowPositions[i] = self.coords.yellowInitials[i]
-                return
+        if color != 'yellow':
+            for i in range(0,4):
+                if position == self.state.yellowPositions[i]:
+                    self.state.yellowPositions[i] = self.coords.yellowInitials[i]
+                    return
+
 
     def alternatePlay(self):
         if self.currentPlay == 'dice':
@@ -83,7 +87,6 @@ class Match():
             color = 'green'
             positions = self.state.greenPositions
             position = self.state.greenPositions[piece]
-
         elif user == 2:
             color = 'blue'
             positions = self.state.bluePositions
@@ -100,39 +103,26 @@ class Match():
             self.coords
         )
 
-        # Checks if another piece from the same color is there
-        for p in positions:
-            if p[0] == self.coords.xValues[nextPosition] \
-            and p[1] == self.coords.yValues[nextPosition]:
-                return False
+        #### handle final position of piece
 
+        # Checks if another piece from the same color is there
+        for i in range(0, 4):
+            if int(i) != int(pieceIndex):
+                if positions[i][0] == self.coords.xValues[nextPosition] and positions[i][1] == self.coords.yValues[nextPosition]:
+                    return False
 
         # Checks if another piece from another color is there
         self.handleCollision(nextPosition, color)
-
-        # Updates state
-        if color == 'red':
-            self.state.redPositions[piece] = [
-                self.coords.xValues[nextPosition],
-                self.coords.yValues[nextPosition]
-            ]
-        elif color == 'green':
-            self.state.greenPositions[piece] = [
-                self.coords.xValues[nextPosition],
-                self.coords.yValues[nextPosition]
-            ]
-        elif color == 'blue':
-            self.state.bluePositions[piece] = [
-                self.coords.xValues[nextPosition],
-                self.coords.yValues[nextPosition]
-            ]
-        elif color == 'yellow':
-            self.state.yellowPositions[piece] = [
-                self.coords.xValues[nextPosition],
-                self.coords.yValues[nextPosition]
-            ]
-
-        # Check winner
+        
+        # Updates value on state
+        self.state.updatePosition(
+            color, 
+            piece,
+            self.coords.xValues[nextPosition],
+            self.coords.yValues[nextPosition]
+        )
+        
+        #### Check winner
 
         # Since movement is valid, can update some important values
         self.nextPlayer()

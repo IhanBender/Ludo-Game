@@ -6,13 +6,19 @@ class State:
         blueInitials,
         yellowInitials
     ):
+        self.redPositions = []
+        self.greenPositions = []
+        self.bluePositions = []
+        self.yellowPositions = []
 
-        self.redPositions = redInitials
-        self.greenPositions = greenInitials
-        self.bluePositions = blueInitials
-        self.yellowPositions = yellowInitials
+        for i in range(0,4):
+            self.redPositions.append(redInitials[i])
+            self.greenPositions.append(greenInitials[i])
+            self.bluePositions.append(blueInitials[i])
+            self.yellowPositions.append(yellowInitials[i])
 
-    def updatePosition(self, color, piece, (x, y)):
+        
+    def updatePosition(self, color, piece, x, y):
         if  color == 'red':
             self.redPositions[piece] = [x, y]
         elif color == 'green':

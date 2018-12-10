@@ -36,13 +36,7 @@ yelFinal = 79
 
 
 def movePiece(position, moves, color, coords):
-    index = 0
-    for i in range(0, len(coords.xValues)):
-        if position[0] == coords.xValues[i] \
-        and position[1] == coords.yValues[i]:
-            index = i
-            break
-
+    # Identifica a cor
     if color == "green":
         cmax = grnMax
         fst = grnFst
@@ -73,12 +67,16 @@ def movePiece(position, moves, color, coords):
 
     # Verifica se esta em uma das posições iniciais
     if position in initials:
-        print position
-        print initials
-        print("In initials")
         return init + moves - 1
-        
 
+    # Encontra o indice correspondente
+    index = 0
+    for i in range(0, len(coords.xValues)):
+        if position[0] == coords.xValues[i] \
+        and position[1] == coords.yValues[i]:
+            index = i
+            break
+        
     # Zona Critica de Entrada
     if index <= cmax and index >= cmax - 5:
         if moves == 6 and index == cmax:

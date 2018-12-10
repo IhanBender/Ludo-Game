@@ -8,12 +8,12 @@ from user import User
 from match import Match
 
 HOST = '192.168.0.8'         # Endereco IP do Servidor
-PORT = 6000      # Porta que o Servidor esta
+PORT = 4000      # Porta que o Servidor esta
 
 MATCH_ID_COUNT = 0
 MATCH_ID_REUSABLE = []
 
-MATCH_SIZE = 1
+MATCH_SIZE = 2
 
 userMutex = threading.Lock()
 matchesMutex = threading.Lock()
@@ -157,6 +157,7 @@ def conectado(con, cliente):
         # Move message
         elif messageType(msg) == '/MOVE':
             print ('received move request')
+
             matchesMutex.acquire()
             if(currentUser.username == '' or (not currentUser.ingame) \
             or currentMatches[currentUser.match_id].currentPlay !='piece' \
@@ -175,6 +176,7 @@ def conectado(con, cliente):
                     matchesMutex.release()
                     con.send("/CONFIRM")
                     print ('confirmed')
+                    
                 else:
                     print("denied 2")
                     matchesMutex.release()
