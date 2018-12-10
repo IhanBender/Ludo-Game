@@ -8,7 +8,7 @@ from user import User
 from match import Match
 
 HOST = '192.168.0.8'         # Endereco IP do Servidor
-PORT = 4000      # Porta que o Servidor esta
+PORT = 5000      # Porta que o Servidor esta
 
 MATCH_ID_COUNT = 0
 MATCH_ID_REUSABLE = []

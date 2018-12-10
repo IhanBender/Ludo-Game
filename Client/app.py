@@ -12,7 +12,7 @@ import time
 import json
 
 HOST = '192.168.0.8'  # Endereco IP do Servidor
-PORT = 4000       # Porta que o Servidor esta
+PORT = 5000       # Porta que o Servidor esta
 
 
 def messageType(msg):
@@ -75,23 +75,39 @@ def requestState():
                     else:
                         dice.drawDice(screen,int(state['gamestate']['dice']))
 
+
                 # Draw pieces
-                for position in state['gamestate']['red']:
+                positions = []
+                for value in state['gamestate']['red']:
+                    positions.append([int(value[0]), int(value[1])])
+                for position in positions:
                     if position in coords.redFinals:
                         piecedrawer.drawRedPiece(screen, position, 15)
                     else:
                         piecedrawer.drawRedPiece(screen, position, 30)
-                for position in state['gamestate']['green']:
+                
+                positions = []
+                for value in state['gamestate']['green']:
+                    positions.append([int(value[0]), int(value[1])])
+                for position in positions:
                     if position in coords.greenFinals:
                         piecedrawer.drawGreenPiece(screen, position, 15)
                     else:
                         piecedrawer.drawGreenPiece(screen, position, 30)
-                for position in state['gamestate']['blue']:
+                
+                positions = []
+                for value in state['gamestate']['blue']:
+                    positions.append([int(value[0]), int(value[1])])
+                for position in positions:
                     if position in coords.blueFinals:
                         piecedrawer.drawBluePiece(screen, position, 15)
                     else:
                         piecedrawer.drawBluePiece(screen, position, 30)
-                for position in state['gamestate']['yellow']:
+                
+                positions = []
+                for value in state['gamestate']['yellow']:
+                    positions.append([int(value[0]), int(value[1])])
+                for position in positions:
                     if position in coords.yellowFinals:
                         piecedrawer.drawYellowPiece(screen, position, 15)
                     else:

@@ -67,6 +67,7 @@ def movePiece(position, moves, color, coords):
 
     # Verifica se esta em uma das posições iniciais
     if position in initials:
+        print 'at initials'
         return init + moves - 1
 
     # Encontra o indice correspondente
@@ -74,22 +75,33 @@ def movePiece(position, moves, color, coords):
     for i in range(0, len(coords.xValues)):
         if position[0] == coords.xValues[i] \
         and position[1] == coords.yValues[i]:
-            index = i
+            index = int(i)
             break
-        
+    print 'index: ',index
+
     # Zona Critica de Entrada
     if index <= cmax and index >= cmax - 5:
+        print 'in zona critica'
         if moves == 6 and index == cmax:
+            print 'Direto pro final'
             return final
-        return fst + ((index + moves) % cmax)
+        elif moves + index <= cmax:
+            print 'keep on critic'
+            return moves + index
+        print 'entering the realm'
+        return fst + ((index + moves) % cmax) - 1
     # Acerto
     if index + moves == fst + 5:
+        print 'pro final'
         return final
     # Move back
     if index + moves > fst + 5:
+        print 'move back'
         return (fst + 5) - (index + moves) % (fst + 5)
     # Zona Critica de Map Loop
-    if index + moves > 55:
-        return (index + moves) %  55
+    if index + moves > 55 and index < 55:
+        print 'loop'
+        return (index + moves) % 55 - 1
     # Default
+    print 'default case: ', index, moves, index+moves
     return index + moves

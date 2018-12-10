@@ -83,18 +83,26 @@ class Match():
             color = 'red'
             positions = self.state.redPositions
             position = self.state.redPositions[piece]
+            finals = self.coords.redFinals
         elif user == 1:
             color = 'green'
             positions = self.state.greenPositions
             position = self.state.greenPositions[piece]
+            finals = self.coords.greenFinals
         elif user == 2:
             color = 'blue'
             positions = self.state.bluePositions
             position = self.state.bluePositions[piece]
+            finals = self.coords.blueFinals
         else:
             color = 'yellow'
             positions = self.state.yellowPositions
             position = self.state.yellowPositions[piece]
+            finals = self.coords.yellowFinals
+
+        # Verifica se esta em uma das posicoes finais
+        if position in finals:
+            return False
 
         nextPosition = movement.movePiece(
             position,
@@ -104,6 +112,18 @@ class Match():
         )
 
         #### handle final position of piece
+        if nextPosition >= 76:
+            print ("Finals")
+            self.state.updatePosition(
+                color,
+                piece,
+                finals[piece][0],
+                finals[piece][1],
+            )
+            self.nextPlayer()
+            self.alternatePlay()
+            return True
+            
 
         # Checks if another piece from the same color is there
         for i in range(0, 4):
