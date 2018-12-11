@@ -12,7 +12,7 @@ import time
 import json
 
 HOST = '192.168.0.8'  # Endereco IP do Servidor
-PORT = 5000       # Porta que o Servidor esta
+PORT = 6000       # Porta que o Servidor esta
 
 
 def messageType(msg):
@@ -20,6 +20,11 @@ def messageType(msg):
 
 def insideStartGame((x,y)):
     if x in range(280, 520) and y in range(260, 340):
+        return True
+    return False
+
+def insideContinuar((x,y)):
+    if x in range(280, 520) and y in range(460, 540):
         return True
     return False
 
@@ -53,10 +58,33 @@ def enterGame(currentMatch):
     state['currentMatch'] = currentMatch
     state['ingame'] = True
     state['inqueue'] = False
+    state['inendscreen'] = False
     state['screen'] = board.BACKGROUND_IMAGE
     drawBackground()
     requestState()
     draw()
+
+
+def checkWinner():
+    print state['gamestate']['winner']
+    if state['gamestate']['winner'] != '-1':
+        if state['gamestate']['winner'] == \
+        state['gamestate']['playerIndex']:
+            state['screen'] = VICTORY_SCREEN
+        else:
+            state['screen'] = DEFEAT_SCREEN
+    
+        state['inendscreen'] = True
+        state['ingame'] = False
+        drawBackground()
+        draw()
+
+        tcp.send('/EXIT')
+        msg = tcp.recv(1024)
+
+        return True
+    return False
+            
 
 def requestState():
     if state["ingame"]:
@@ -67,14 +95,26 @@ def requestState():
             state['gamestate'] = json.loads(param1(msg))
 
             if oldstate != state['gamestate']:
+                if checkWinner():
+                    return       
+
                 drawBackground()
-                # Draw dice with value
                 if isMyTurn():
+                    # Draw my colored dice without value
                     if state['gamestate']['currentPlay'] == 'dice':
+                        dice.drawDice(screen, 0, state['gamestate']['currentTurn'])
+                    else:
+                        # Draw my colored dice with value
+                        dice.drawDice(screen,   \
+                        int(state['gamestate']['dice']), \
+                        state['gamestate']['currentTurn'])
+                else: #Not my turn
+                    if state['gamestate']['currentPlay'] == 'dice':
+                        # Draw normal dice without value
                         dice.drawDice(screen, 0)
                     else:
-                        dice.drawDice(screen,int(state['gamestate']['dice']))
-
+                        # Draw normal dice with value
+                        dice.drawDice(screen, int(state['gamestate']['dice']))
 
                 # Draw pieces
                 positions = []
@@ -153,13 +193,13 @@ def rollDice():
         tcp.send('/DICE')
         msg = tcp.recv(1024)
         if messageType(msg) == '/CONFIRM':
-            dice.drawDice(screen, 0)
+            dice.drawDice(screen, 0, state['gamestate']['playerIndex'])
             draw()
             tcp.send('/STATE')
             msg = tcp.recv(1024)
             if messageType(msg) == '/UPDATE':
                 state['gamestate'] = json.loads(param1(msg))
-                dice.drawDice(screen, int(state['gamestate']['dice']))
+                dice.drawDice(screen, int(state['gamestate']['dice']), state['gamestate']['playerIndex'])
                 time.sleep(0.7)
                 draw()
                 return True
@@ -204,9 +244,14 @@ while True:
 
 # Inicializa jogo
 pygame.init()
-inicialScreen = pygame.image.load("images/main_menu.jpg")
+initialScreen = pygame.image.load("images/main_menu.jpg")
 searchClick = pygame.image.load("images/main_menu2.jpg")
 searching = pygame.image.load("images/buscando3.png")
+VICTORY_SCREEN = pygame.image.load("images/vitoria1.png")
+VITORIA_ANIM = pygame.image.load("images/vitoria2.png")
+DEFEAT_SCREEN = pygame.image.load("images/derrota1.png")
+DEFEAT_ANIM = pygame.image.load("images/derrota2.png")
+
 screen = pygame.display.set_mode((800, 600))
 
 coords = Coordinates()
@@ -219,8 +264,9 @@ startTime = 0.0
 state = {
     'inqueue' : False,
     'ingame' : False,
+    'inendscreen' : False,
     'rolling': False,
-    'screen' : inicialScreen,
+    'screen' : initialScreen,
     'gamestate' : {}
 }
 
@@ -238,7 +284,7 @@ while not done:
         if  (pygame.mouse.get_pressed()[0] == 1):
             # Buscar partida
             if (insideStartGame(pygame.mouse.get_pos())) and \
-            state['screen'] == inicialScreen:
+            state['screen'] == initialScreen:
                 if enterQueue() and state['inqueue']:
                     msg = tcp.recv(1024)
                     if messageType(msg) == '/BEGIN':
@@ -259,11 +305,32 @@ while not done:
                 if piece_hit != -1:
                     if isMyTurn() and state['gamestate']['currentPlay'] == 'piece':
                         move = movePiece(piece_hit)
+                        #####
                         #if move:
                             # Informe usuário que a jogada foi bem sucedida
                         #else:
                             # Informe que deve fazer outra jogada
 
+            # Sair da tela de fim da partida
+            if (state['screen'] == VICTORY_SCREEN or    \
+            state['screen'] == DEFEAT_SCREEN) \
+            and state['inendscreen']:
+                if insideContinuar(pygame.mouse.get_pos()):
+                    if state['screen'] == VICTORY_SCREEN:
+                        state['screen'] = VITORIA_ANIM
+                    else:
+                        state['screen'] = DEFEAT_ANIM
+                    drawBackground()
+                    draw()
+                    time.sleep(0.7)       
+                    state['inendscreen'] = False
+                    state['gamestate'] = {}
+                    state['screen']  = initialScreen  
+                    drawBackground()
+                    draw()
+
+
+        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 # Sai da partida (se tiver)

@@ -8,7 +8,7 @@ from user import User
 from match import Match
 
 HOST = '192.168.0.8'         # Endereco IP do Servidor
-PORT = 5000      # Porta que o Servidor esta
+PORT = 6000      # Porta que o Servidor esta
 
 MATCH_ID_COUNT = 0
 MATCH_ID_REUSABLE = []
@@ -196,6 +196,7 @@ def conectado(con, cliente):
                 currentUser.ingame = False
                 currentUser.match_id = -1
                 updateUser(currentUser)
+                con.send('/CONFIRM')
 
 
     print 'Finalizando conexao do cliente', cliente

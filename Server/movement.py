@@ -99,7 +99,7 @@ def movePiece(position, moves, color, coords):
         print 'move back'
         return (fst + 5) - (index + moves) % (fst + 5)
     # Zona Critica de Map Loop
-    if index + moves > 55 and index < 55:
+    if index + moves > 55 and index <= 55:
         print 'loop'
         return (index + moves) % 55 - 1
     # Default

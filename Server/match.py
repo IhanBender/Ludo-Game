@@ -38,6 +38,38 @@ class Match():
             self.isActive.append(False)
 
 
+    def hasWon(self, player):
+        if player == 0:
+            positions = self.state.redPositions
+            finals = self.coords.redFinals
+        elif player == 1:
+            positions = self.state.greenPositions
+            finals = self.coords.greenFinals
+        elif player == 2:
+            positions = self.state.bluePositions
+            finals = self.coords.blueFinals
+        else:
+            positions = self.state.yellowPositions
+            finals = self.coords.yellowFinals
+
+        print positions
+        print finals
+        if positions == finals:
+            print 'infinals'
+            return True
+
+        return False
+        
+    def checkWinner(self):
+        for i in range(0, 4):
+            if self.isActive[i]:
+                if self.hasWon(i):
+                    print i
+                    self.winner = i
+                    return True
+        
+        return False
+
     def handleCollision(self, nextPosition, color):
         position = [
             self.coords.xValues[nextPosition],
@@ -111,7 +143,7 @@ class Match():
             self.coords
         )
 
-        #### handle final position of piece
+        # handle final position of piece
         if nextPosition >= 76:
             print ("Finals")
             self.state.updatePosition(
@@ -142,8 +174,11 @@ class Match():
             self.coords.yValues[nextPosition]
         )
         
-        #### Check winner
-
+        # Check winner
+        if self.checkWinner():
+            self.ended = True
+        
+        
         # Since movement is valid, can update some important values
         self.nextPlayer()
         self.alternatePlay()
@@ -165,7 +200,8 @@ class Match():
             if self.isActive[i]:
                 inGame.append(i)
         if len(inGame) == 1:
-            self.winner = inGame[0]
+            if self.winner == -1:
+                self.winner = inGame[0]
             self.turn = inGame[0]
         elif len(inGame) == 0:
             return
