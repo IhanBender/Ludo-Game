@@ -66,7 +66,6 @@ def enterGame(currentMatch):
 
 
 def checkWinner():
-    print state['gamestate']['winner']
     if state['gamestate']['winner'] != '-1':
         if state['gamestate']['winner'] == \
         state['gamestate']['playerIndex']:
@@ -179,7 +178,6 @@ def pieceHit((x, y)):
     else: #pIndex
         positions = state['gamestate']['yellow']
 
-    #print positions
     for i in range(0,4):
         if x > int(positions[i][0]) and x < int(positions[i][0]) + coords.SQUARE_SIDE \
         and y > int(positions[i][1]) and y < int(positions[i][1]) + coords.SQUARE_SIDE:

@@ -52,10 +52,7 @@ class Match():
             positions = self.state.yellowPositions
             finals = self.coords.yellowFinals
 
-        print positions
-        print finals
         if positions == finals:
-            print 'infinals'
             return True
 
         return False
@@ -64,7 +61,6 @@ class Match():
         for i in range(0, 4):
             if self.isActive[i]:
                 if self.hasWon(i):
-                    print i
                     self.winner = i
                     return True
         
@@ -145,7 +141,6 @@ class Match():
 
         # handle final position of piece
         if nextPosition >= 76:
-            print ("Finals")
             self.state.updatePosition(
                 color,
                 piece,

@@ -156,7 +156,6 @@ def conectado(con, cliente):
 
         # Move message
         elif messageType(msg) == '/MOVE':
-            print ('received move request')
 
             matchesMutex.acquire()
             if(currentUser.username == '' or (not currentUser.ingame) \
@@ -165,7 +164,6 @@ def conectado(con, cliente):
             currentUser.playerIndex):
                 matchesMutex.release()
                 con.send('/DENY')
-                print("denied 1")
             else:
                 matchesMutex.release()
                 pieceIndex = msg.split(' ')[1]
@@ -175,10 +173,8 @@ def conectado(con, cliente):
                 )):
                     matchesMutex.release()
                     con.send("/CONFIRM")
-                    print ('confirmed')
                     
                 else:
-                    print("denied 2")
                     matchesMutex.release()
                     con.send('/DENY')
 
