@@ -11,8 +11,8 @@ import datetime
 import time
 import json
 
-HOST = '192.168.0.8'  # Endereco IP do Servidor
-PORT = 6000       # Porta que o Servidor esta
+HOST = '192.168.0.16'  # Endereco IP do Servidor
+PORT = 4000       # Porta que o Servidor esta
 
 
 def messageType(msg):
@@ -98,10 +98,11 @@ def requestState():
                     return       
 
                 drawBackground()
+                screen.blit(turnIndicators[int(state['gamestate']['currentTurn'])], (0, 0))
                 if isMyTurn():
                     # Draw my colored dice without value
                     if state['gamestate']['currentPlay'] == 'dice':
-                        dice.drawDice(screen, 0, state['gamestate']['currentTurn'])
+                        dice.drawDice(screen, 7, state['gamestate']['currentTurn'])
                     else:
                         # Draw my colored dice with value
                         dice.drawDice(screen,   \
@@ -124,7 +125,7 @@ def requestState():
                         piecedrawer.drawRedPiece(screen, position, 15)
                     else:
                         piecedrawer.drawRedPiece(screen, position, 30)
-                
+
                 positions = []
                 for value in state['gamestate']['green']:
                     positions.append([int(value[0]), int(value[1])])
@@ -133,7 +134,7 @@ def requestState():
                         piecedrawer.drawGreenPiece(screen, position, 15)
                     else:
                         piecedrawer.drawGreenPiece(screen, position, 30)
-                
+
                 positions = []
                 for value in state['gamestate']['blue']:
                     positions.append([int(value[0]), int(value[1])])
@@ -142,7 +143,7 @@ def requestState():
                         piecedrawer.drawBluePiece(screen, position, 15)
                     else:
                         piecedrawer.drawBluePiece(screen, position, 30)
-                
+
                 positions = []
                 for value in state['gamestate']['yellow']:
                     positions.append([int(value[0]), int(value[1])])
@@ -151,7 +152,6 @@ def requestState():
                         piecedrawer.drawYellowPiece(screen, position, 15)
                     else:
                         piecedrawer.drawYellowPiece(screen, position, 30)
-
                 draw()
 
             return True
@@ -245,6 +245,12 @@ pygame.init()
 initialScreen = pygame.image.load("images/main_menu.jpg")
 searchClick = pygame.image.load("images/main_menu2.jpg")
 searching = pygame.image.load("images/buscando3.png")
+turnIndicators = [
+    pygame.image.load("images/turnRed.png"),
+    pygame.image.load("images/turnGreen.png"),
+    pygame.image.load("images/turnBlue.png"),
+    pygame.image.load("images/turnYellow.png"),
+]
 VICTORY_SCREEN = pygame.image.load("images/vitoria1.png")
 VITORIA_ANIM = pygame.image.load("images/vitoria2.png")
 DEFEAT_SCREEN = pygame.image.load("images/derrota1.png")

@@ -20,6 +20,7 @@ class Dice:
         self.rfaces.append(pygame.image.load("images/Rdice4.png"))
         self.rfaces.append(pygame.image.load("images/Rdice5.png"))
         self.rfaces.append(pygame.image.load("images/Rdice6.png"))
+        self.rfaces.append(pygame.image.load("images/RdiceRoll.png"))
 
         self.gfaces = []
         self.gfaces.append(pygame.image.load("images/Gdice0.png"))
@@ -29,6 +30,7 @@ class Dice:
         self.gfaces.append(pygame.image.load("images/Gdice4.png"))
         self.gfaces.append(pygame.image.load("images/Gdice5.png"))
         self.gfaces.append(pygame.image.load("images/Gdice6.png"))
+        self.gfaces.append(pygame.image.load("images/GdiceRoll.png"))
 
         self.bfaces = []
         self.bfaces.append(pygame.image.load("images/Bdice0.png"))
@@ -38,6 +40,7 @@ class Dice:
         self.bfaces.append(pygame.image.load("images/Bdice4.png"))
         self.bfaces.append(pygame.image.load("images/Bdice5.png"))
         self.bfaces.append(pygame.image.load("images/Bdice6.png"))
+        self.bfaces.append(pygame.image.load("images/BdiceRoll.png"))
 
         self.yfaces = []
         self.yfaces.append(pygame.image.load("images/Ydice0.png"))
@@ -47,10 +50,11 @@ class Dice:
         self.yfaces.append(pygame.image.load("images/Ydice4.png"))
         self.yfaces.append(pygame.image.load("images/Ydice5.png"))
         self.yfaces.append(pygame.image.load("images/Ydice6.png"))
+        self.yfaces.append(pygame.image.load("images/YdiceRoll.png"))
 
     def drawDice(self, screen, face, color='-1'):
         if color == '-1':
-            screen.blit(self.faces[face], (700, 500))
+            screen.blit(self.faces[face], (0, 0))
         elif color == '0':
             screen.blit(self.rfaces[face], (0, 0))
         elif color == '1':
